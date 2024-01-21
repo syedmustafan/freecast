@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  django:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=freecast.settings
+
+  celery:
+    build: .
+    command: celery -A freecast worker --loglevel=info
+    depends_on:
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=freecast.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  celery-beat:
+    build: .
+    command: celery -A freecast beat --loglevel=info
+    depends_on:
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=freecast.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
